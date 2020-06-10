@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1591821452 source:/home/pi/Projects/ST1000_Controller/ST1000.cpp
+	<iostream>
+	<wiringPi.h>
+	<wiringSerial.h>
+	<unistd.h>
+	<ST1000.h>
+
+1591821488 /home/pi/Projects/ST1000_Controller/ST1000.h
+

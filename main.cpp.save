@@ -1,0 +1,19 @@
+#include <iostream>
+#include <wiringPi.h>
+#include <wiringSerial.h>
+
+using namespace std;
+
+int main()
+{
+    cout << "Hello world!" << endl;
+    int fd;
+    if(wiringPiSetup() < 0)return 1;
+    if((fd = serialOpen("/dev/ttyUSB0",9600)) < 0)return 1;
+    printf("serial test start ...\n");
+    while(TRUE)
+    {
+    serialPrintf(fd,"Hello World!!!\n");
+
+    return 0;
+}
