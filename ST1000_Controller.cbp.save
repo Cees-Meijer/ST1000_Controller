@@ -14,7 +14,11 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="../ST1000_Controller" />
+					<Add directory="include" />
 				</Compiler>
+				<Linker>
+					<Add library="wiringPi" />
+				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/ST1000_Controller" prefix_auto="1" extension_auto="1" />
@@ -23,6 +27,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -33,8 +38,9 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="ST1000.cpp" />
-		<Unit filename="ST1000.h" />
+		<Unit filename="ST_Sonar.cpp" />
+		<Unit filename="ST_Sonar.h" />
+		<Unit filename="main.cpp" />
 		<Unit filename="serialib.cpp" />
 		<Unit filename="serialib.h" />
 		<Extensions>

@@ -1,82 +1,25 @@
-//
-//Control program for the Tritech ST1000 Scanning Sonar
-//Uses the ' Serialib' for serial comms by 'LuLu' https://lucidar.me/en/serialib/cross-plateform-rs232-serial-library/
+#include "ST_Sonar.h"
 
-#include <iostream>
-#include <wiringPi.h>
-#include <serialib.h>
-#include <unistd.h> //For Sleep
-#include <ST1000.h>
-
-
-using namespace std;
-
-int main()
+ST_Sonar::ST_Sonar()
 {
-    cout << "Hello world!" << endl;
-
-   // if(wiringPiSetup() < 0)return 1;
-    if((ScannerPort.openDevice("/dev/ttyUSB0",9600)) !=1)return 1;
-    printf("serial test start ...\n");
-
-    ScannerPort.writeString("Hello World!!!\n");
-    usleep(1000000);
-    printf(" SizeOf Unsigned Short:%d",sizeof(Params.TxPulse));
-
-    Params.InitialGain = 100;//0-255
-    Params.GainIncrement = 100; //0-255
-    Params.LockOut= 100;// Lockout time in 1.96uS [0-65535]
-    Params.ScaleDenom=11184 ;
-    Params.RangeUnits=1;         // 0=cm, 1= mm units
-    Params.MaxDistance = 100;
-    Params.TimeOut=Params.MaxDistance;
-
-    SaveSettings();
-    ReadSettings();
-    ReadParameters();
-    printf("Get Centre\r\n");
-    EstablishCentre();
-    return 0;
+    PosSensor =0;
+    StepSize = STEP_FULL;
 }
 
-bool SaveSettings()
+ST_Sonar::~ST_Sonar()
 {
-    FILE* file;
-    int bytes_written;
+    //dtor
+}
+void ST_Sonar::SetStepSize(stepSize S)
+{
+if(S==STEP_HALF ){ StepAngleDegrees = 0.9; }
+else{ StepAngleDegrees = 1.8; }
+Steps = (int)(360/StepAngleDegrees);
+StepSize = S;
 
-    file = fopen("parameters.cfg", "wb");
-    if (!file)
-        return -1;
-         printf("Size of params %d \r\n",sizeof(Params) );
-    bytes_written = fwrite(&Params,1,sizeof(Params),file);
-    fclose(file);
-    printf(" %d Bytes written\r\n",bytes_written );
-    if(bytes_written==0){return FALSE;}
-    return TRUE;
 }
 
-bool ReadSettings()
-{
-FILE* file;
-    int bytes_read;
-
-    file = fopen("parameters.cfg", "rb");
-    if (!file) return -1;
-     printf("Size of params %d \r\n",sizeof(Params) );
-    bytes_read = fread(&Params,1,sizeof(Params),file);
-    fclose(file);
-    printf(" %d Bytes read\r\n",bytes_read );
-    if(bytes_read==0){return FALSE;}
-    return TRUE;
-}
-
-void Init()
-{
-PosSensor =0;
-}
-
-
-bool SendCommand(char m[255],unsigned int len,char Reply)
+bool ST_Sonar::SendCommand(char m[255],unsigned int len,char Reply)
 {
 char ch=' ';
 
@@ -90,7 +33,7 @@ else {return false;};
 }
 
 // Read all sonar parameter into the Params struct
-bool ReadParameters()
+bool ST_Sonar::ReadParameters()
 {
 unsigned char *pChar;
 ScannerPort.flushReceiver();
@@ -100,7 +43,7 @@ ScannerPort.flushReceiver();
 
  printf(" Reading %d bytes\r\n",bytes);
 
- if (bytes< sizeof(Params)){printf("Timeout while reading Parameters\r\n");return FALSE;};
+ if (bytes< sizeof(Params)){printf("Timeout while reading Parameters\r\n");return false;};
  //unsigned char * P = (unsigned char*)&Params;
  //for(int i=0;i<bytes;i++){printf("%02X ",(unsigned char)*P++);}
  printf("Sonar Parameters");
@@ -129,26 +72,23 @@ ScannerPort.flushReceiver();
 // tbGain->Position=(int)Params.InitialGain ;
 // tbTVG->Position =Params.GainIncrement;
 // tbLockOut->Position=Params.LockOut;
-return TRUE;
+return true;
 }
 
-bool UpdateParams()
+bool ST_Sonar::UpdateParams()
 {
 char Reply;
 char C[10];
-C[0]='V';
-Reply=WriteCommand(C,1);
-C[0]='H';
+C[0]='V';Reply=WriteCommand(C,1);
+if(StepSize == STEP_FULL){C[0]='Y';} // Step Size: Full = 1.8, Half = 0.9 degrees
+else{C[0]='H';}
 Reply=WriteCommand(C,1);
 C[0]='=';C[1]=0;C[2]=0; // Set motor delay to 0
 Reply=WriteCommand(C,3);
-C[0]='X';
-Reply=WriteCommand(C,1);
-C[0]='K';
-Reply=WriteCommand(C,1);
-C[0]='E';C[1]=0xD2;
-Reply=WriteCommand(C,2);
-C[0]='T';C[1]=0x3;C[2]=0x0;C[3]=0x0;C[4]=0x0;C[5]=0x0;C[6]=0x81;C[7]=0x14;C[8]=0x98;
+C[0]='X'; Reply=WriteCommand(C,1); // Enable TVG
+C[0]='K'; Reply=WriteCommand(C,1); // MOde: return Range bin peak value
+C[0]='E';C[1]=0xD2; Reply=WriteCommand(C,2);
+C[0]='T';C[1]=0x3;C[2]=0x0;C[3]=0x0;C[4]=0x0;C[5]=0x0;C[6]=0x81;C[7]=0x14;C[8]=0x98; //Set TVG Gains
 Reply=WriteCommand(C,9);
 
 
@@ -164,10 +104,10 @@ ScannerPort.writeChar('J');
 ScannerPort.writeBytes(&Params,sizeof(Params));
 ScannerPort.readChar(&Reply,100);
 printf("Parameters updated:%c ",Reply);
-return TRUE;
+return true;
 }
 
-char WriteCommand(char*C,int len)
+char ST_Sonar::WriteCommand(char*C,int len)
 {
 char Reply=0;
 ScannerPort.writeBytes(C,len);
@@ -175,10 +115,10 @@ ScannerPort.readChar(&Reply,100);
 return Reply;
 }
 
-bool Step(bool cw)
+bool ST_Sonar::Step(bool cw)
 {
 char Reply;
-if (cw) {ScannerPort.writeChar('+');}
+if (cw) {ScannerPort.writeChar('+');} //Clockwise single step
 else {ScannerPort.writeChar('-');}
 ScannerPort.readChar(&Reply,100);
 
@@ -200,21 +140,21 @@ PosSensor=Reply;
 
 return true; // Returns true when head direction sensor detected.
 }
-bool GoLeft()
+bool ST_Sonar::GoLeft()
 {
 usleep(DELAYTIME); // Wait for motor. typ 1 ms
 //DecScanPosition();
 return Step(false); // Call Step CCW, and return result
 }
 
-bool GoRight()
+bool ST_Sonar::GoRight()
 {
 usleep(DELAYTIME); // Wait for motor. typ 1 ms
 //IncScanPosition();
 return Step(true); // Call Step CW, and return result
 }
 
-bool EstablishCentre()
+bool ST_Sonar::EstablishCentre()
 {
 bool Right,Left,Rising,Falling;
 Right=Rising=true;
@@ -293,7 +233,7 @@ else
  return Ok;
 }
 
-bool FindSensorEdge(bool Direction,bool Edge, unsigned short Count)
+bool ST_Sonar::FindSensorEdge(bool Direction,bool Edge, unsigned short Count)
 {
 unsigned short Ctr;
 bool Ok;
@@ -306,4 +246,48 @@ do
  }
 while (Ok && (Ctr!=Count)&&(DetectedEdge!=Edge));
 if (Ok && (DetectedEdge==Edge)){return true;} else {return false;}
+}
+
+void ST_Sonar::Scan(int Sector1, int Sector2)
+{
+
+EchoDataType EchoData;
+//Sector1=(int)(udSector1->Position / StepAngleDegrees);
+//Sector2=(int)(udSector2->Position / StepAngleDegrees);
+time_t T = time(0);   // get time now
+//TTimeStamp T;
+
+char ScanDirection=')';
+bool scanning = true;
+ScannerPort.flushReceiver();
+while(scanning == true)
+ {
+ EchoRangeType Echo;
+ ScannerPort.writeChar(ScanDirection);
+ T=time(0);
+ ScannerPort.readBytes(&Echo,sizeof(Echo));
+ EchoData.Time=T;
+ EchoData.Angle=(Position*StepAngleDegrees);
+ EchoData.Range=Echo.Range;
+ printf("%ld,%0.1f,%d,%d\r\n" ,T,EchoData.Angle,EchoData.Range,Position);
+
+if (ScanDirection == ')')
+ {
+ Position++;
+ if ( Position >= Steps ) Position=0;
+ if ( Position== Sector1) ScanDirection = '(';
+ }
+else
+ {
+ Position--;
+ if ( Position < 0 ) Position=Steps-1;
+ if ( Position== Sector2) ScanDirection = ')';
+
+ }
+
+ if (Position==1 && Echo.Reply != 't' && Echo.Reply !='T')
+  {
+   printf("Error in scanhead position.\r\n Restart to recenter.");
+  }
+ }
 }

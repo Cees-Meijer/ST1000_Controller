@@ -1,5 +1,15 @@
-#define DELAYTIME 1000
+#ifndef ST_SONAR_H
+#define ST_SONAR_H
 #include <serialib.h>
+#define DELAYTIME 1000
+
+class ST_Sonar
+{
+    public:
+        ST_Sonar();
+        virtual ~ST_Sonar();
+
+
 
 #pragma pack(1)
 typedef struct
@@ -24,7 +34,7 @@ typedef struct{
  }EchoRangeType;
 #pragma pack()
 typedef struct{
- int Time;
+ time_t Time;
  float Angle;
  unsigned short Range;
  float X;
@@ -32,10 +42,33 @@ typedef struct{
  }EchoDataType;
 ParamsType Params;
 
+enum stepSize {STEP_FULL,STEP_HALF};
+
 bool SaveSettings();
 char WriteCommand(char*C,int len);
 bool ReadSettings();
 bool ReadParameters();
+bool SendCommand(char m[255],unsigned int len,char Reply);
+bool UpdateParams();
+bool Step(bool cw);
+bool GoLeft();
+bool GoRight();
+bool EstablishCentre();
+bool FindSensorEdge(bool Direction,bool Edge, unsigned short Count);
+void Scan(int,int);
+void SetStepSize(stepSize);
+bool DetectedEdge,HaveLostSteps;
+unsigned short Counter,SenseLeft, SenseRight,SenseMiddle,ScanAhead,L0,L1,R0,R1;
 
 char PosSensor;
+int Steps,Position;
 serialib ScannerPort;
+
+    protected:
+
+    private:
+float StepAngleDegrees;
+stepSize StepSize;
+};
+
+#endif // ST_SONAR_H

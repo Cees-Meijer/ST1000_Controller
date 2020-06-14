@@ -1,85 +1,16 @@
-//
-//Control program for the Tritech ST1000 Scanning Sonar
-//Uses the ' Serialib' for serial comms by 'LuLu' https://lucidar.me/en/serialib/cross-plateform-rs232-serial-library/
+#include "ST_Sonar.h"
 
-#include <iostream>
-#include <serialib.h>
-#include <unistd.h> //For Sleep
-#include <ST1000.h>
-#include <time.h>
-
-
-using namespace std;
-
-int main()
+ST_Sonar::ST_Sonar()
 {
-    cout << "Hello world!" << endl;
-
-   // if(wiringPiSetup() < 0)return 1;
-    if((ScannerPort.openDevice("/dev/ttyUSB0",9600)) !=1)return 1;
-    printf("serial test start ...\n");
-
-    ScannerPort.writeString("Hello World!!!\n");
-    usleep(1000000);
-    printf(" SizeOf Unsigned Short:%d",sizeof(Params.TxPulse));
-
-    Params.InitialGain = 50;//0-255
-    Params.GainIncrement = 60; //0-255
-    Params.LockOut= 60;// Lockout time in 1.96uS [0-65535]
-    Params.ScaleDenom=11184 ;
-    Params.RangeUnits=1;         // 0=cm, 1= mm units
-    Params.MaxDistance = 5000; //Max distance in range units
-    Params.TimeOut=Params.MaxDistance;
-
-    SaveSettings();
-    ReadSettings();
-    ReadParameters();
-    printf("Get Centre\r\n");
-    EstablishCentre();
-    StepAngleDegrees = 0.9;
-    Steps=(int)(360/StepAngleDegrees);
-    Scan(100,50);
-    return 0;
+    PosSensor =0;
 }
 
-bool SaveSettings()
+ST_Sonar::~ST_Sonar()
 {
-    FILE* file;
-    int bytes_written;
-
-    file = fopen("parameters.cfg", "wb");
-    if (!file)
-        return -1;
-         printf("Size of params %d \r\n",sizeof(Params) );
-    bytes_written = fwrite(&Params,1,sizeof(Params),file);
-    fclose(file);
-    printf(" %d Bytes written\r\n",bytes_written );
-    if(bytes_written==0){return FALSE;}
-    return true;
+    //dtor
 }
 
-bool ReadSettings()
-{
-FILE* file;
-    int bytes_read;
-
-    file = fopen("parameters.cfg", "rb");
-    if (!file) return -1;
-     printf("Size of params %d \r\n",sizeof(Params) );
-    bytes_read = fread(&Params,1,sizeof(Params),file);
-    fclose(file);
-    printf(" %d Bytes read\r\n",bytes_read );
-    if(bytes_read==0){return FALSE;}
-    return TRUE;
-}
-
-void Init()
-{
-PosSensor =0;
-}
-
-
-bool SendCommand(char m[255],unsigned int len,char Reply)
+bool ST_Sonar::SendCommand(char m[255],unsigned int len,char Reply)
 {
 char ch=' ';
 
@@ -93,7 +24,7 @@ else {return false;};
 }
 
 // Read all sonar parameter into the Params struct
-bool ReadParameters()
+bool ST_Sonar::ReadParameters()
 {
 unsigned char *pChar;
 ScannerPort.flushReceiver();
@@ -135,7 +66,7 @@ ScannerPort.flushReceiver();
 return TRUE;
 }
 
-bool UpdateParams()
+bool ST_Sonar::UpdateParams()
 {
 char Reply;
 char C[10];
@@ -170,7 +101,7 @@ printf("Parameters updated:%c ",Reply);
 return TRUE;
 }
 
-char WriteCommand(char*C,int len)
+char ST_Sonar::WriteCommand(char*C,int len)
 {
 char Reply=0;
 ScannerPort.writeBytes(C,len);
@@ -178,7 +109,7 @@ ScannerPort.readChar(&Reply,100);
 return Reply;
 }
 
-bool Step(bool cw)
+bool ST_Sonar::Step(bool cw)
 {
 char Reply;
 if (cw) {ScannerPort.writeChar('+');}
@@ -203,21 +134,21 @@ PosSensor=Reply;
 
 return true; // Returns true when head direction sensor detected.
 }
-bool GoLeft()
+bool ST_Sonar::GoLeft()
 {
 usleep(DELAYTIME); // Wait for motor. typ 1 ms
 //DecScanPosition();
 return Step(false); // Call Step CCW, and return result
 }
 
-bool GoRight()
+bool ST_Sonar::GoRight()
 {
 usleep(DELAYTIME); // Wait for motor. typ 1 ms
 //IncScanPosition();
 return Step(true); // Call Step CW, and return result
 }
 
-bool EstablishCentre()
+bool ST_Sonar::EstablishCentre()
 {
 bool Right,Left,Rising,Falling;
 Right=Rising=true;
@@ -296,7 +227,7 @@ else
  return Ok;
 }
 
-bool FindSensorEdge(bool Direction,bool Edge, unsigned short Count)
+bool ST_Sonar::FindSensorEdge(bool Direction,bool Edge, unsigned short Count)
 {
 unsigned short Ctr;
 bool Ok;
@@ -311,7 +242,7 @@ while (Ok && (Ctr!=Count)&&(DetectedEdge!=Edge));
 if (Ok && (DetectedEdge==Edge)){return true;} else {return false;}
 }
 
-void Scan(int Sector1, int Sector2)
+void ST_Sonar::Scan(int Sector1, int Sector2)
 {
 float RangeDivider;
 float Angle;
