@@ -1,4 +1,7 @@
-#pragma option push -a1
+#define DELAYTIME 1000
+#include <serialib.h>
+
+#pragma pack(1)
 typedef struct
 {
  unsigned short TxPulse;
@@ -19,7 +22,7 @@ typedef struct{
  unsigned short Range;
  char Reply;
  }EchoRangeType;
-#pragma pop
+#pragma pack()
 typedef struct{
  int Time;
  float Angle;
@@ -31,4 +34,8 @@ ParamsType Params;
 
 bool SaveSettings();
 char WriteCommand(char*C,int len);
-int ScannerPort;
+bool ReadSettings();
+bool ReadParameters();
+
+char PosSensor;
+serialib ScannerPort;

@@ -1,0 +1,14 @@
+ulse length :58.8uS
+Timeout      :34133
+Lockout      :300
+Wait Time    :25600
+Initial gain :50
+TVG Slope    :64
+RangeScaling :16383
+RangeScale2  :11374
+Max distance :50000
+DAC scale 1  :256
+DAC scale 1  :3125
+Range units  :0
+Checksum     :40
+Calc Checksum     :40

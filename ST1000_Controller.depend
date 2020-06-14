@@ -1,10 +1,27 @@
 # depslib dependency file v1.0
-1591821452 source:/home/pi/Projects/ST1000_Controller/ST1000.cpp
+1592137656 source:/home/pi/Projects/ST1000_Controller/ST1000.cpp
 	<iostream>
 	<wiringPi.h>
-	<wiringSerial.h>
+	<serialib.h>
 	<unistd.h>
 	<ST1000.h>
 
-1591821488 /home/pi/Projects/ST1000_Controller/ST1000.h
+1592137235 /home/pi/Projects/ST1000_Controller/ST1000.h
+	<serialib.h>
+
+1592126333 source:/home/pi/Projects/ST1000_Controller/serialib.cpp
+	"serialib.h"
+
+1592126333 /home/pi/Projects/ST1000_Controller/serialib.h
+	<sys/time.h>
+	<windows.h>
+	<stdlib.h>
+	<sys/types.h>
+	<sys/shm.h>
+	<termios.h>
+	<string.h>
+	<iostream>
+	<fcntl.h>
+	<unistd.h>
+	<sys/ioctl.h>
 

@@ -15,9 +15,6 @@
 					<Add option="-g" />
 					<Add directory="../ST1000_Controller" />
 				</Compiler>
-				<Linker>
-					<Add library="wiringPi" />
-				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="bin/Release/ST1000_Controller" prefix_auto="1" extension_auto="1" />
@@ -38,6 +35,8 @@
 		</Compiler>
 		<Unit filename="ST1000.cpp" />
 		<Unit filename="ST1000.h" />
+		<Unit filename="serialib.cpp" />
+		<Unit filename="serialib.h" />
 		<Extensions>
 			<code_completion />
 			<debugger />
