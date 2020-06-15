@@ -8,7 +8,10 @@ using namespace std;
 int main()
 {
 
-    if((ST.ScannerPort.openDevice("/dev/ttyUSB0",9600)) !=1)return 1;
+    if((ST.ScannerPort.openDevice("/dev/ttyUSB0",9600)) !=1) {
+    printf("Error opening Serial port for Sonar");
+    return 1;
+    }
     printf("serial test start ...\n");
 
     ST.Params.InitialGain = 50;//0-255
@@ -21,10 +24,21 @@ int main()
 
     //SaveSettings();
     //ReadSettings();
-    ST.ReadParameters();
+
     printf("Get Centre\r\n");
+    if (ST.EstablishCentre())
+    {
     ST.EstablishCentre();
     ST.SetStepSize(ST.STEP_HALF);
-    ST.Scan(100,50);
+    ST.UpdateParams();
+    ST.Start(60,300);
+    ST_Sonar::EchoDataType ED;
+    while(true)
+    {
+     ST.Scan(&ED);
+     printf("%ld,%0.2f,%d\r",ED.Time,ED.Angle,ED.Range);
+     usleep(10000);
+    }
+    }else{printf("Error intializing Sonar");}
     return 0;
 }

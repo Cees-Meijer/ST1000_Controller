@@ -55,13 +55,14 @@ bool GoLeft();
 bool GoRight();
 bool EstablishCentre();
 bool FindSensorEdge(bool Direction,bool Edge, unsigned short Count);
-void Scan(int,int);
+void Scan(EchoDataType*ED);
+bool Start(int,int);
 void SetStepSize(stepSize);
 bool DetectedEdge,HaveLostSteps;
 unsigned short Counter,SenseLeft, SenseRight,SenseMiddle,ScanAhead,L0,L1,R0,R1;
 
 char PosSensor;
-int Steps,Position;
+int Steps,Position,Sector1,Sector2;
 serialib ScannerPort;
 
     protected:
@@ -69,6 +70,7 @@ serialib ScannerPort;
     private:
 float StepAngleDegrees;
 stepSize StepSize;
+char ScanDirection;
 };
 
 #endif // ST_SONAR_H

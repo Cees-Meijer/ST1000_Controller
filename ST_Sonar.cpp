@@ -19,6 +19,13 @@ StepSize = S;
 
 }
 
+bool ST_Sonar::Start(int SectorFromDegrees, int SectorToDegrees)
+{
+ Sector1 = SectorFromDegrees/StepAngleDegrees;Sector2=SectorToDegrees/StepAngleDegrees;
+ ScanDirection=')';
+ ScannerPort.flushReceiver();
+ return true;
+}
 bool ST_Sonar::SendCommand(char m[255],unsigned int len,char Reply)
 {
 char ch=' ';
@@ -167,6 +174,7 @@ PosSensor=0; ScanAhead=0;SenseLeft=0;SenseRight=0,Counter=0;
 char C[10];
 C[0]='H';
 Ok=SendCommand(C,1,'H');       // Switch to half step mode
+if(Ok==false){return false;}
 Search=410;
 printf("Rotate Right..\r\n");
 if (FindSensorEdge(Right,Rising,Search))
@@ -176,7 +184,7 @@ if (FindSensorEdge(Right,Rising,Search))
  if (FindSensorEdge(Right,Falling,Search))
   {
   printf("Found position detector left.\r\n");
-  x=div(Counter,2); HalfSensor=x.quot; // C++ support for DIV is poor...
+  x=div(Counter,2); HalfSensor=x.quot;
   SenseLeft=ScanAhead-HalfSensor;
   }
  else
@@ -248,28 +256,21 @@ while (Ok && (Ctr!=Count)&&(DetectedEdge!=Edge));
 if (Ok && (DetectedEdge==Edge)){return true;} else {return false;}
 }
 
-void ST_Sonar::Scan(int Sector1, int Sector2)
+void ST_Sonar::Scan(EchoDataType *EchoData)
 {
 
-EchoDataType EchoData;
-//Sector1=(int)(udSector1->Position / StepAngleDegrees);
-//Sector2=(int)(udSector2->Position / StepAngleDegrees);
 time_t T = time(0);   // get time now
-//TTimeStamp T;
 
-char ScanDirection=')';
-bool scanning = true;
 ScannerPort.flushReceiver();
-while(scanning == true)
- {
+
  EchoRangeType Echo;
  ScannerPort.writeChar(ScanDirection);
  T=time(0);
  ScannerPort.readBytes(&Echo,sizeof(Echo));
- EchoData.Time=T;
- EchoData.Angle=(Position*StepAngleDegrees);
- EchoData.Range=Echo.Range;
- printf("%ld,%0.1f,%d,%d\r\n" ,T,EchoData.Angle,EchoData.Range,Position);
+ EchoData->Time=T;
+ EchoData->Angle=(Position*StepAngleDegrees);
+ EchoData->Range=Echo.Range;
+ //printf("%ld,%0.1f,%d,%d\r\n" ,T,EchoData->Angle,EchoData->Range);
 
 if (ScanDirection == ')')
  {
@@ -289,5 +290,5 @@ else
   {
    printf("Error in scanhead position.\r\n Restart to recenter.");
   }
- }
+
 }
